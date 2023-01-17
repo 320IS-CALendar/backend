@@ -1,5 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
+import { PrismaClientValidationError } from '@prisma/client/runtime';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/CreateUser';
 import { IUser } from './interfaces/User';
@@ -16,8 +21,17 @@ export class UsersService {
     return this.prisma.user.findUnique({ where });
   }
 
-  create(data: Prisma.UserCreateInput): Promise<User> {
-    return this.prisma.user.create({ data });
+  async create(data: Prisma.UserCreateInput): Promise<User> {
+    try {
+      return await this.prisma.user.create({ data });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new ConflictException(`Not unique ${err.meta?.target[0]}`);
+      }
+    }
   }
 
   update(
