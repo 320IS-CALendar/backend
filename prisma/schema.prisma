@@ -15,12 +15,14 @@ model User {
   surname  String
   password String
   groups   UsersInGroups[]
+  Event    Event[]
 }
 
 model Group {
-  id    Int             @id @default(autoincrement())
-  name  String
-  users UsersInGroups[]
+  id         Int             @id @default(autoincrement())
+  name       String
+  users      UsersInGroups[]
+  GroupEvent GroupEvent[]
 }
 
 model UsersInGroups {
@@ -32,4 +34,26 @@ model UsersInGroups {
   joinedAt DateTime @default(now())
 
   @@id([userId, groupId])
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  startMoment DateTime
+  endMoment   DateTime
+  title       String
+  description String?
+
+  creator   User @relation(fields: [creatorId], references: [id])
+  creatorId Int
+
+  createdAt  DateTime     @default(now())
+  GroupEvent GroupEvent[]
+}
+
+model GroupEvent {
+  id      Int   @id @default(autoincrement())
+  event   Event @relation(fields: [eventId], references: [id])
+  eventId Int
+  group   Group @relation(fields: [groupId], references: [id])
+  groupId Int
 }
